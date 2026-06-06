@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Kimia Digital & Tabel Periodik</title>
+    <style>
+        :root {
+            --primary: #1a5276;
+            --secondary: #2874a6;
+            --accent: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        header {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        header h1 { font-size: 32px; margin-bottom: 5px; }
+        header p { opacity: 0.9; font-size: 16px; }
+        
+        .container {
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            color: #7f8c8d;
+            transition: all 0.3s;
+            border-bottom: 4px solid transparent;
+        }
+        .tab-btn:hover { background: #f8f9fa; }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom: 4px solid var(--accent);
+            background: #f0f8ff;
+        }
+        
+        /* Content Sections */
+        .content-section {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            animation: fadeIn 0.4s ease;
+        }
+        .content-section.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+        
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--dark); }
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        button.calculate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, var(--accent), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+        button.calculate-btn:hover { transform: translateY(-2px); }
+        button.calculate-btn:active { transform: translateY(0); }
+        
+        /* Result Box */
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #d5f5e3, #abebc6);
+            border-left: 5px solid var(--success);
+            border-radius: 8px;
+            display: none;
+        }
+        .result-box.show { display: block; animation: slideIn 0.3s ease; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .result-label { font-size: 14px; color: #666; }
+        .result-value { font-size: 32px; font-weight: bold; color: var(--success); margin: 5px 0; }
+        .result-note { font-size: 13px; color: #666; font-style: italic; }
+        
+        /* Periodic Table Styling */
+        .search-box { margin-bottom: 20px; }
+        .search-box input {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat 15px center;
+            padding-left: 45px;
+            background-size: 20px;
+        }
+        
+        .table-container { overflow-x: auto; }
+        table.periodic-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        table.periodic-table th {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 14px;
+            text-align: center;
+            font-weight: 600;
+        }
+        table.periodic-table td {
+            padding: 12px 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        table.periodic-table tr:hover { background: #f0f8ff; }
+        table.periodic-table tr:nth-child(even) { background: #f9f9f9; }
+        
+        .highlight-row { background: #fff3cd !important; font-weight: bold; }
+        
+        /* Info Box */
+        .info-box {
+            background: #e8f4f8;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .info-box h4 { color: var(--primary); margin-bottom: 10px; }
+        
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🧪 KALKULATOR KIMIA DIGITAL</h1>
+    <p>Pembuatan Larutan • Pengenceran • Tabel Periodik Lengkap</p>
+</header>
+
+<div class="container">
+    
+    <!-- TAB NAVIGATION -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('prep')">📌 Pembuatan Larutan</button>
+        <button class="tab-btn" onclick="openTab('dilution')">📌 Pengenceran</button>
+        <button class="tab-btn" onclick="openTab('table')">📌 Tabel Periodik</button>
+    </div>
+
+    <!-- 1. PEMBUATAN LARUTAN -->
+    <div id="prep" class="content-section active">
+        <h2 class="section-title">💧 Pembuatan Larutan (Massa = M × V × Mr)</h2>
+        <p style="margin-bottom:20px; color:#666;">Menghitung massa zat padatan yang dibutuhkan untuk membuat larutan dengan konsentrasi tertentu.</p>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="chemicalSelect">🏷️ Pilih Zat Terlarut</label>
+                <select id="chemicalSelect" onchange="updateMrDisplay()">
+                    <option value="">-- Pilih Zat Kimia --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📊 Massa Molar (Mr)</label>
+                <input type="text" id="currentMr" value="-" disabled style="background:#f5f5f5; color:#888;">
+            </div>
+            <div class="form-group">
+                <label for="volPrep">🧪 Volume Larutan Akhir (mL)</label>
+                <input type="number" id="volPrep" placeholder="Contoh: 500">
+            </div>
+            <div class="form-group">
+                <label for="concPrep">📈 Konsentrasi Akhir (Molar)</label>
+                <input type="number" id="concPrep" placeholder="Contoh: 0.5">
+            </div>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculateMass()">Hitung Massa Zat</button>
+        
+        <div class="result-box" id="resultPrep">
+            <div class="result-label">Massa yang perlu ditimbang:</div>
+            <div class="result-value" id="valPrep">0 gram</div>
+            <div class="result-note">Rumus: Massa (g) = Molaritas × Volume (L) × Mr</div>
+        </div>
+        
+        <div class="info-box">
+            <h4>📝 Cara Penggunaan:</h4>
+            <ol style="padding-left:20px; color:#555;">
+                <li>Pilih zat terlarut dari dropdown (Mr otomatis muncul)</li>
+                <li>Masukkan volume larutan yang ingin dibuat (dalam mL)</li>
+                <li>Masukkan konsentrasi molar yang diinginkan</li>
+                <li>Klik "Hitung Massa Zat" untuk melihat hasil</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- 2. PENGENCERAN -->
+    <div id="dilution" class="content-section">
+        <h2 class="section-title">💧 Pengenceran Larutan (C₁V₁ = C₂V₂)</h2>
+        <p style="margin-bottom:20px; color:#666;">Menghitung volume larutan stok (pekat) yang diperlukan untuk membuat larutan encer.</p>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="c1">📊 Konsentrasi Larutan Stok (C₁) - M</label>
+                <input type="number" id="c1" placeholder="Contoh: 1">
+            </div>
+            <div class="form-group">
+                <label for="c2">📈 Konsentrasi Target (C₂) - M</label>
+                <input type="number" id="c2" placeholder="Contoh: 0.1">
+            </div>
+            <div class="form-group">
+                <label for="v2">🧪 Volume Target (V₂) - mL</label>
+                <input type="number" id="v2" placeholder="Contoh: 100">
+            </div>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculateDilution()">Hitung Volume Pengenceran</button>
+        
+        <div class="result-box" id="resultDil">
+            <div class="result-label">Volume larutan stok yang diambil (V₁):</div>
+            <div class="result-value" id="valDil">0 mL</div>
+            <div class="result-note">Tambahkan air secukupnya hingga volume total mencapai <span id="textV2">0</span> mL</div>
+        </div>
+        
+        <div class="info-box">
+            <h4>📝 Rumus C₁V₁ = C₂V₂:</h4>
+            <ul style="padding-left:20px; color:#555;">
+                <li><strong>C₁</strong>: Konsentrasi larutan stok (pekat)</li>
+                <li><strong>V₁</strong>: Volume larutan stok yang diambil</li>
+                <li><strong>C₂</strong>: Konsentrasi target yang diinginkan</li>
+                <li><strong>V₂</strong>: Volume target larutan akhir</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 3. TABEL PERIODIK -->
+    <div id="table" class="content-section">
+        <h2 class="section-title">📘 Tabel Periodik Unsur Lengkap</h2>
+        <p style="margin-bottom:20px; color:#666;">Data Nomor Atom, Massa Atom Relatif (Mr), dan informasi unsur.</p>
+        
+        <div class="search-box">
+            <input type="text" id="searchTable" onkeyup="filterTable()" placeholder="🔍 Cari nama unsur atau simbol...">
+        </div>
+        
+        <div class="table-container">
+            <table class="periodic-table" id="ptTable">
+                <thead>
+                    <tr>
+                        <th>No. Atom</th>
+                        <th>Simbol</th>
+                        <th>Nama Unsur</th>
+                        <th>Massa Atom (Mr)</th>
+                        <th>Kategori</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data diisi oleh JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== DATABASE PERIODIK LENGKAP ==========
+    const elements = [
+        {no:1,sym:"H",nama:"Hidrogen",mr:1.008,kat:"Non-logam"},
+        {no:2,sym:"He",nama:"Helium",mr:4.0026,kat:"Gas Mulia"},
+        {no:3,sym:"Li",nama:"Litium",mr:6.94,kat:"Logam Alkali"},
+        {no:4,sym:"Be",nama:"Berilium",mr:9.0122,kat:"Logam alkaline earth"},
+        {no:5,sym:"B",nama:"Boron",mr:10.81,kat:"Metalloid"},
+        {no:6,sym:"C",nama:"Karbon",mr:12.011,kat:"Non-logam"},
+        {no:7,sym:"N",nama:"Nitrogen",mr:14.007,kat:"Non-logam"},
+        {no:8,sym:"O",nama:"Oksigen",mr:15.999,kat:"Non-logam"},
+        {no:9,sym:"F",nama:"Fluor",mr:18.998,kat:"Halogen"},
+        {no:10,sym:"Ne",nama:"Neon",mr:20.180,kat:"Gas Mulia"},
+        {no:11,sym:"Na",nama:"Natrium",mr:22.990,kat:"Logam Alkali"},
+        {no:12,sym:"Mg",nama:"Magnesium",mr:24.305,kat:"Logam alkaline earth"},
+        {no:13,sym:"Al",nama:"Aluminium",mr:26.982,kat:"Logam Post-transisi"},
+        {no:14,sym:"Si",nama:"Silikon",mr:28.086,kat:"Metalloid"},
+        {no:15,sym:"P",nama:"Fosfor",mr:30.974,kat:"Non-logam"},
+        {no:16,sym:"S",nama:"Belerang",mr:32.06,kat:"Non-logam"},
+        {no:17,sym:"Cl",nama:"Klor",mr:35.45,kat:"Halogen"},
+        {no:18,sym:"Ar",nama:"Argon",mr:39.948,kat:"Gas Mulia"},
+        {no:19,sym:"K",nama:"Kalium",mr:39.098,kat:"Logam Alkali"},
+        {no:20,sym:"Ca",nama:"Kalsium",mr:40.078,kat:"Logam alkaline earth"},
+        {no:21,sym:"Sc",nama:"Skandium",mr:44.956,kat:"Logam Transisi"},
+        {no:22,sym:"Ti",nama:"Titanium",mr:47.867,kat:"Logam Transisi"},
+        {no:23,sym:"V",nama:"Vanadium",mr:50.942,kat:"Logam Transisi"},
+        {no:24,sym:"Cr",nama:"Krom",mr:51.996,kat:"Logam Transisi"},
+        {no:25,sym:"Mn",nama:"Mangan",mr:54.938,kat:"Logam Transisi"},
+        {no:26,sym:"Fe",nama:"Besi",mr:55.845,kat:"Logam Transisi"},
